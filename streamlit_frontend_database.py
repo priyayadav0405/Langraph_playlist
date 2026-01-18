@@ -1,7 +1,7 @@
 import streamlit as st
 import uuid
 #calling the graph
-from langgraph_backend3 import chatbot
+from langgraph_database_backend import chatbot,retrieve_all_thread
 from langchain_core.messages import HumanMessage
 
 
@@ -32,12 +32,14 @@ if 'message_history' not in st.session_state:
 
 #in state of session we can muliple keys like conversation history ,threadid etc
 if 'thread_id' not in st.session_state:
-    thread_id = generate_thread_id()
-    st.session_state['thread_id'] =  thread_id
-    st.session_state['message_history'] = []
+    st.session_state['thread_id'] = generate_thread_id()
+    # st.session_state['thread_id'] =  thread_id
+    # st.session_state['message_history'] = []
 
 if 'chat_threads' not in st.session_state:
-    st.session_state['chat_threads'] = []
+    # print(type(retrieve_all_thread))
+    threads=retrieve_all_thread()
+    st.session_state['chat_threads'] = threads if threads else []
 
 add_thread(st.session_state['thread_id'])
 #--------------------------------------SIDEBAR UI------------------
@@ -91,9 +93,9 @@ if user_input:
         ai_message = st.write_stream(
             message_chunk.content for message_chunk , metadata in chatbot.stream(
                 {'messages' : [HumanMessage(content=user_input)]},
-                config={'configurable' : {'thread_id' :'thread-1'}},
+                config={'configurable' : {'thread_id' :st.session_state['thread_id']}},
                 stream_mode='messages'
             )
         )
 
-    st.session_state['message_history'].append({'role':'user','content':ai_message})
+    st.session_state['message_history'].append({'role':'assistant','content':ai_message})
